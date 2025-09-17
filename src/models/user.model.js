@@ -11,19 +11,15 @@ const userSchema=new Schema({
         required:true,
         unique:true
     },
-    telephone:{
-        type:Number,
-        required:true,
-        unique:true
-    },
     fullname:{
         type:String,
         required:true
     },
-    description:{
-        type:String
+    password:{
+        type:String,
+        unique:true,
+        required:true
     }
-    
 },{timestamps:true})
 
 export const User=mongoose.model("User",userSchema)
