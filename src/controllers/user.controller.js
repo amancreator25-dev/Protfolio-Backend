@@ -2,6 +2,7 @@ import { User } from "../models/user.model.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { apiError } from "../utils/apiError.js"
 import { asyncHandler } from "../utils/asyncHandler.js";
+import generateAccessTokenAndRefreshToken from "../utils/generateRATokens.js";
 
 
 const accountResgister=asyncHandler(async(req,res)=>{
@@ -45,11 +46,42 @@ const accountResgister=asyncHandler(async(req,res)=>{
 const accountLogin=asyncHandler(async(res,req)=>{
     const {email, password}=req.body
 
-    const existUser=await User.findOne({email:email})
+    if(!(email || username)){
+        throw new apiError(400,"Email or Username Required!")
+    }
 
+    const existUser=await User.findOne(
+        {
+           $or:[{email:email},{username:username}]
+        }
+    )
+
+    const validatePassword=await existUser.isPasswordCorrect(password)
+
+    if(!validatePassword){
+        throw new apiError(400,"Incorrect Password!!!")
+    }
+
+    const {accessToken, refreshToken}=generateAccessTokenAndRefreshToken(existUser._id)
     
+    const options={
+        httpOnly:true,
+        secure:true,
+    }
+
+    return(res
+    .status(200)
+    .cookie("accessToken",accessToken,options)
+    .cookie("refreshToken",refreshToken,options)
+    .json(apiResponse(200,
+        {
+            user:loggedInUser,accessToken,refreshToken
+        },
+        "User Logged In Successfully!!!"))
+    )
 })
 
 export {
     accountResgister,
+    accountLogin,
 }
