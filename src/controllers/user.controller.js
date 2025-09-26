@@ -3,6 +3,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { apiError } from "../utils/apiError.js"
 import { asyncHandler } from "../utils/asyncHandler.js";
 import generateAccessTokenAndRefreshToken from "../utils/generateRATokens.js";
+import { set } from "mongoose";
 
 
 const accountResgister=asyncHandler(async(req,res)=>{
@@ -81,7 +82,46 @@ const accountLogin=asyncHandler(async(res,req)=>{
     )
 })
 
+const updatePassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword, username, email } = req.body;
+
+    if (!(email || username)) {
+        throw new apiError(400, "Username or email is required!");
+    }
+
+    if (!(oldPassword && newPassword)) {
+        throw new apiError(400, "OldPassword and NewPassword both are required!");
+    }
+
+    // 1. Find user first
+    const user = await User.findOne({
+        $or: [{ email }, { username }]
+    });
+
+    if (!user) {
+        throw new apiError(404, "User not found!");
+    }
+
+    // 2. Validate old password
+    const isValid = await user.isPasswordCorrect(oldPassword);
+    if (!isValid) {
+        throw new apiError(400, "Incorrect OldPassword!");
+    }
+
+    // 3. Update with new password
+    user.password = newPassword; // will be hashed by pre-save middleware
+    await user.save();
+
+    // 4. Return response
+    return res
+        .status(200)
+        .json(apiResponse(200, {}, "Password Updated Successfully!"));
+});
+
+
+
 export {
     accountResgister,
     accountLogin,
+    updatePassword
 }

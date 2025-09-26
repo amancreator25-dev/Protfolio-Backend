@@ -5,12 +5,16 @@ const blogSchema=new Schema({
         type:Schema.Types.ObjectId,
         ref:"User"
     },
+    title:{
+        type:String,
+        required:true
+    },
     content:{
         type:String,
         required:true
     },
     blogimage:{
-        type:String,     //cloudinary Url
+        type:String,     //Cloudinary Url
     }
 },{timestamps:true})
 
