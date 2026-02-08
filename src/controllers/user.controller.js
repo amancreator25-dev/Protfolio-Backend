@@ -115,10 +115,21 @@ const updatePassword = asyncHandler(async (req, res) => {
     // 4. Return response
     return res
         .status(200)
-        .json(apiResponse(200, {}, "Password Updated Successfully!"));
+        .json(new apiResponse(200, {}, "Password Updated Successfully!"));
 });
 
-
+const CurrentUser=asyncHandler(async(req,res)=>{
+    const userData=req.user
+    if(!userData){
+        throw new apiError(404,"Error in user data fetching!!!")
+    }
+    return(
+        res
+        .status(200)
+        .json(new apiResponse(200,userData,"User Data fetched Successfully!!!"))
+    )
+    
+})
 
 export {
     accountResgister,
