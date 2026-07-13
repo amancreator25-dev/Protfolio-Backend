@@ -1,25 +1,29 @@
 import { Router } from "express";
-import { changePassword, getCurrentUser, refreshAccessToken, registerUser,updateAccountDetails,userLogin, userLogout } from "../controllers/user.controller.js";
-import { upload } from "../middlewares/multer.middleware.js"
+import {
+  changePassword,
+  getCurrentUser,
+  refreshAccessToken,
+  registerUser,
+  updateAccountDetails,
+  userLogin,
+  userLogout
+} from "../controllers/user.controller.js";
+
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
-const router=Router();
+const router = Router();
 
-router.route("/register").post(
-    registerUser                    //API response Sending
-);
+// 🔓 Public routes
+router.post("/register", registerUser);
+router.post("/login", userLogin);
 
-router.route("/Login").post(userLogin);
+// 🔐 Protected routes
+router.post("/logout", verifyJWT, userLogout);
+router.post("/change-password", verifyJWT, changePassword);
+router.get("/me", verifyJWT, getCurrentUser);
+router.put("/account-details", verifyJWT, updateAccountDetails);
 
-router.route("/Logout").post(
-    verifyJWT,                      //middlewareInjection 
-    userLogout
-);
-
-router.route("/Change-Password").post(verifyJWT,changePassword)
-
-router.route("/Account-Details").get(verifyJWT,getCurrentUser)
-
-router.route("/Get-RefreshToken").post(verifyJWT,refreshAccessToken)
+// 🔁 Refresh token (NO verifyJWT here)
+router.post("/refresh-token", refreshAccessToken);
 
 export default router;

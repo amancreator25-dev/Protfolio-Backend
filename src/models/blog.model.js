@@ -13,9 +13,9 @@ const blogSchema=new Schema({
         type:String,
         required:true
     },
-    blogimage:{
+   /* blogimage:{
         type:String,     //Cloudinary Url
-    }
+    }*/
 },{timestamps:true})
 
 export const Blog=mongoose.model("Blog",blogSchema)
