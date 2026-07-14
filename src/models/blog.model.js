@@ -1,21 +1,39 @@
-import mongoose,{Schema} from "mongoose"
+import mongoose, { Schema } from "mongoose";
 
-const blogSchema=new Schema({
-    owner:{
-        type:Schema.Types.ObjectId,
-        ref:"User"
-    },
-    title:{
-        type:String,
-        required:true
-    },
-    content:{
-        type:String,
-        required:true
-    },
-   /* blogimage:{
-        type:String,     //Cloudinary Url
-    }*/
-},{timestamps:true})
+const blogSchema = new Schema(
+    {
+        owner: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
 
-export const Blog=mongoose.model("Blog",blogSchema)
+        title: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        content: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        // Optional cover image
+        blogImage: {
+            type: String, // Cloudinary URL
+            default: ""
+        },
+
+        isPublished: {
+            type: Boolean,
+            default: true
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+export const Blog = mongoose.model("Blog", blogSchema);

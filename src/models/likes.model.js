@@ -1,14 +1,28 @@
-import mongoose,{Schema} from "mongoose"
+import mongoose, { Schema } from "mongoose";
 
-const likeSchema=new Schema({
-    likedby:{
-        type:Schema.Types.ObjectId,
-        ref:"User"
+const likeSchema = new Schema(
+    {
+        likedBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
+
+        blog: {
+            type: Schema.Types.ObjectId,
+            ref: "Blog",
+            required: true
+        }
     },
-    blog:{
-        type:Schema.Types.ObjectId,
-        ref:"Blog"
+    {
+        timestamps: true
     }
-},{timestamps:true})
+);
 
-export const Like=mongoose.model("Like",likeSchema)
+// Prevent a user from liking the same blog multiple times
+likeSchema.index(
+    { likedBy: 1, blog: 1 },
+    { unique: true }
+);
+
+export const Like = mongoose.model("Like", likeSchema);

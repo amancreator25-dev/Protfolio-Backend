@@ -1,138 +1,242 @@
 import { User } from "../models/user.model.js";
 import { apiResponse } from "../utils/apiResponse.js";
-import { apiError } from "../utils/apiError.js"
+import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import generateAccessTokenAndRefreshToken from "../utils/generateRATokens.js";
-import { set } from "mongoose";
 
+const accountRegister = asyncHandler(async (req, res) => {
+    const { fullname, username, password, email } = req.body;
 
-const accountResgister=asyncHandler(async(req,res)=>{
-    const{fullname, username, password, email}=req.body
-
-    if(
-        [fullname, email, password, username].some((field)=>field?.trim()==="")
-    ){
-        throw new apiError(400, "All fields are Must")
-    }
-    console.log("Checking for user:", email, username);
-
-    const exists=await User.findOne({email:email, username:username})
-
-    if(exists){
-        throw new apiError(400, "Username Or Email Exists!!!")
+    if (
+        [fullname, username, password, email].some(
+            (field) => field?.trim() === ""
+        )
+    ) {
+        throw new apiError(400, "All fields are required!");
     }
 
-    const user=await User.create({
-        username:username,
-        email:email,
-        password:password,
-        fullname:fullname,
-    })
+    const exists = await User.findOne({
+        $or: [{ email }, { username }]
+    });
 
-    if(!user){
-        throw new apiError(400,"Error in creating Account!")
+    if (exists) {
+        throw new apiError(400, "Username or Email already exists!");
     }
 
-    const createdUser=await User.findById(user._id).select("-password -refreshToken");       //This .select() will remove password and refreshToken and send the remaining dataFields
-    console.log(createdUser.fullname);
+    const user = await User.create({
+        fullname,
+        username,
+        email,
+        password
+    });
 
-    return(
-        res
-        .status(200)
-        .json(apiResponse(200,{createdUser},"Account Created Successfully!!!"))
-    )
+    const createdUser = await User.findById(user._id)
+        .select("-password -refreshToken");
 
-})
+    return res.status(201).json(
+        new apiResponse(
+            201,
+            createdUser,
+            "Account Created Successfully!"
+        )
+    );
+});
 
-const accountLogin=asyncHandler(async(res,req)=>{
-    const {email, password}=req.body
-
-    if(!(email || username)){
-        throw new apiError(400,"Email or Username Required!")
-    }
-
-    const existUser=await User.findOne(
-        {
-           $or:[{email:email},{username:username}]
-        }
-    )
-
-    const validatePassword=await existUser.isPasswordCorrect(password)
-
-    if(!validatePassword){
-        throw new apiError(400,"Incorrect Password!!!")
-    }
-
-    const {accessToken, refreshToken}=generateAccessTokenAndRefreshToken(existUser._id)
-    
-    const options={
-        httpOnly:true,
-        secure:true,
-    }
-
-    return(res
-    .status(200)
-    .cookie("accessToken",accessToken,options)
-    .cookie("refreshToken",refreshToken,options)
-    .json(apiResponse(200,
-        {
-            user:loggedInUser,accessToken,refreshToken
-        },
-        "User Logged In Successfully!!!"))
-    )
-})
-
-const updatePassword = asyncHandler(async (req, res) => {
-    const { oldPassword, newPassword, username, email } = req.body;
+const accountLogin = asyncHandler(async (req, res) => {
+    const { email, username, password } = req.body;
 
     if (!(email || username)) {
-        throw new apiError(400, "Username or email is required!");
+        throw new apiError(
+            400,
+            "Email or Username is required!"
+        );
+    }
+
+    if (!password) {
+        throw new apiError(
+            400,
+            "Password is required!"
+        );
+    }
+
+    const existUser = await User.findOne({
+        $or: [{ email }, { username }]
+    });
+
+    if (!existUser) {
+        throw new apiError(
+            404,
+            "User not found!"
+        );
+    }
+
+    const validatePassword =
+        await existUser.isPasswordCorrect(password);
+
+    if (!validatePassword) {
+        throw new apiError(
+            400,
+            "Incorrect Password!"
+        );
+    }
+
+    const { accessToken, refreshToken } =
+        await generateAccessTokenAndRefreshToken(
+            existUser._id
+        );
+
+    const loggedInUser = await User.findById(
+        existUser._id
+    ).select("-password -refreshToken");
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None"
+    };
+
+    return res
+        .status(200)
+        .cookie(
+            "accessToken",
+            accessToken,
+            options
+        )
+        .cookie(
+            "refreshToken",
+            refreshToken,
+            options
+        )
+        .json(
+            new apiResponse(
+                200,
+                {
+                    user: loggedInUser,
+                    accessToken,
+                    refreshToken
+                },
+                "User Logged In Successfully!"
+            )
+        );
+});
+
+const updatePassword = asyncHandler(async (req, res) => {
+    const {
+        oldPassword,
+        newPassword,
+        username,
+        email
+    } = req.body;
+
+    if (!(email || username)) {
+        throw new apiError(
+            400,
+            "Username or Email is required!"
+        );
     }
 
     if (!(oldPassword && newPassword)) {
-        throw new apiError(400, "OldPassword and NewPassword both are required!");
+        throw new apiError(
+            400,
+            "Old Password and New Password are required!"
+        );
     }
 
-    // 1. Find user first
     const user = await User.findOne({
         $or: [{ email }, { username }]
     });
 
     if (!user) {
-        throw new apiError(404, "User not found!");
+        throw new apiError(
+            404,
+            "User not found!"
+        );
     }
 
-    // 2. Validate old password
-    const isValid = await user.isPasswordCorrect(oldPassword);
+    const isValid =
+        await user.isPasswordCorrect(oldPassword);
+
     if (!isValid) {
-        throw new apiError(400, "Incorrect OldPassword!");
+        throw new apiError(
+            400,
+            "Incorrect Old Password!"
+        );
     }
 
-    // 3. Update with new password
-    user.password = newPassword; // will be hashed by pre-save middleware
-    await user.save();
+    user.password = newPassword;
 
-    // 4. Return response
-    return res
-        .status(200)
-        .json(new apiResponse(200, {}, "Password Updated Successfully!"));
+    await user.save({
+        validateBeforeSave: false
+    });
+
+    return res.status(200).json(
+        new apiResponse(
+            200,
+            {},
+            "Password Updated Successfully!"
+        )
+    );
 });
 
-const CurrentUser=asyncHandler(async(req,res)=>{
-    const userData=req.user
-    if(!userData){
-        throw new apiError(404,"Error in user data fetching!!!")
+const currentUser = asyncHandler(async (req, res) => {
+    if (!req.user) {
+        throw new apiError(
+            404,
+            "User data not found!"
+        );
     }
-    return(
-        res
+
+    return res.status(200).json(
+        new apiResponse(
+            200,
+            req.user,
+            "User Data fetched Successfully!"
+        )
+    );
+});
+
+const logoutUser = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1
+            }
+        },
+        {
+            new: true
+        }
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None"
+    };
+
+    return res
         .status(200)
-        .json(new apiResponse(200,userData,"User Data fetched Successfully!!!"))
-    )
-    
-})
+        .clearCookie(
+            "accessToken",
+            options
+        )
+        .clearCookie(
+            "refreshToken",
+            options
+        )
+        .json(
+            new apiResponse(
+                200,
+                {},
+                "User Logged Out Successfully!"
+            )
+        );
+});
 
 export {
-    accountResgister,
+    accountRegister,
     accountLogin,
-    updatePassword
-}
+    updatePassword,
+    currentUser,
+    logoutUser
+};

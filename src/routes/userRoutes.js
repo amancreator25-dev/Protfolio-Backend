@@ -1,29 +1,35 @@
+// routes/user.routes.js
+
 import { Router } from "express";
+
 import {
-  changePassword,
-  getCurrentUser,
-  refreshAccessToken,
-  registerUser,
-  updateAccountDetails,
-  userLogin,
-  userLogout
+    accountRegister,
+    accountLogin,
+    updatePassword,
+    currentUser,
+    logoutUser
 } from "../controllers/user.controller.js";
 
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// 🔓 Public routes
-router.post("/register", registerUser);
-router.post("/login", userLogin);
+router.post("/register", accountRegister);
+router.post("/login", accountLogin);
 
-// 🔐 Protected routes
-router.post("/logout", verifyJWT, userLogout);
-router.post("/change-password", verifyJWT, changePassword);
-router.get("/me", verifyJWT, getCurrentUser);
-router.put("/account-details", verifyJWT, updateAccountDetails);
 
-// 🔁 Refresh token (NO verifyJWT here)
-router.post("/refresh-token", refreshAccessToken);
+router.post("/logout", verifyJWT, logoutUser);
+
+router.patch(
+    "/change-password",
+    verifyJWT,
+    updatePassword
+);
+
+router.get(
+    "/me",
+    verifyJWT,
+    currentUser
+);
 
 export default router;
