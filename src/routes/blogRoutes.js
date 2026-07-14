@@ -7,8 +7,7 @@ import {
     getAllBlogs,
     getBlogById,
     updateBlog,
-    deleteBlog,
-    getMyBlogs
+    deleteBlog
 } from "../controllers/blog.controller.js";
 
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -37,7 +36,7 @@ router.get("/:blogId", getBlogById);
 router.post("/create", verifyJWT, createBlog);
 
 // Get logged-in user's blogs
-router.get("/my/blogs", verifyJWT, getMyBlogs);
+// router.get("/my/blogs", verifyJWT, getMyBlogs);
 
 // Update own blog
 router.put("/:blogId", verifyJWT, updateBlog);
