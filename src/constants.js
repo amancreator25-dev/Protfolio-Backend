@@ -1,3 +1,2 @@
-export default{ 
-    DB_NAME:"Protfolio"
-}
+
+export const DB_NAME = "Protfolio";
