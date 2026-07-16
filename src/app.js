@@ -3,7 +3,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
+import connectRouter from "./routes/connectRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import blogRouter from "./routes/blogRoutes.js";
 
@@ -44,6 +44,7 @@ app.use(cookieParser());
 
 app.use("/api/auth", userRouter);
 app.use("/api/blog", blogRouter);
+app.use("/api/contact", connectRouter);
 
 /*
 |--------------------------------------------------------------------------
@@ -54,7 +55,7 @@ app.use("/api/blog", blogRouter);
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,
-        message: "Portfolio Backend API is running 🚀",
+        message: "Portfolio Backend API is running ",
     });
 });
 
