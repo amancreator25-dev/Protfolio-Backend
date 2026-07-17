@@ -1,4 +1,7 @@
 // src/app.js
+import dotenv from "dotenv";
+dotenv.config();
+
 
 import express from "express";
 import cors from "cors";
@@ -14,7 +17,7 @@ const app = express();
 | Middlewares
 |--------------------------------------------------------------------------
 */
-
+console.log( "CORS",  process.env.CORS_ORIGIN)
 // CORS Configuration
 app.use(
     cors({
@@ -22,6 +25,8 @@ app.use(
         credentials: true,
     })
 );
+
+
 
 // Request body parsers
 app.use(express.json({ limit: "16kb" }));
