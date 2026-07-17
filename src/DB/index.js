@@ -3,6 +3,7 @@ import { DB_NAME } from "../constants.js";
 
 const connectDB = async () => {
     try {
+        console.log(process.env.MONGODB_URI)
         const uri = `${process.env.MONGODB_URI}/${DB_NAME}`;
 
         console.log(uri);
