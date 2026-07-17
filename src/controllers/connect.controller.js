@@ -4,6 +4,8 @@ import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 
 const createContact = asyncHandler(async (req, res) => {
+    console.log(req.body);
+
     const {
         fullname,
         email,
