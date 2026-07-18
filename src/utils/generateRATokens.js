@@ -1,18 +1,31 @@
-import {User} from "../models/user.model.js"
+import { User } from "../models/user.model.js";
+import { apiError } from "./apiError.js";
 
-const generateAccessTokenAndRefreshToken=async (userId)=>{
-    try{
-        const user=await User.findById(userId);
-        const accessToken=await user.generateAccessToken();                 //Check this line while debugging
-        const refreshToken=await user.generateRefreshToken();               //Check this line while debugging
+const generateAccessTokenAndRefreshToken = async (userId) => {
+    try {
+        console.log("1. Finding user...");
+        const user = await User.findById(userId);
 
-            user.refreshToken=refreshToken;                                 //Check this line while debugging
-            await user.save({validateBeforeSave:false})
+        console.log("2. User found:", user.username);
 
-        return {accessToken, refreshToken};
-    }catch(error){
-        throw new apiError(500,"Something went wrong while generating access and refresh token!!")
-    }
+        const accessToken = user.generateAccessToken();
+        console.log("3. Access token generated");
+
+        const refreshToken = user.generateRefreshToken();
+        console.log("4. Refresh token generated");
+
+        user.refreshToken = refreshToken;
+        console.log("5. Saving user...");
+
+        await user.save({ validateBeforeSave: false });
+
+        console.log("6. User saved");
+
+        return { accessToken, refreshToken };
+    } catch (error) {
+    console.error("ACTUAL ERROR:", error);
+    throw error;
 }
+};
 
 export default generateAccessTokenAndRefreshToken;

@@ -91,8 +91,8 @@ const accountLogin = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true,
-        sameSite: "None"
+        secure: false,
+        sameSite: "lax"
     };
 
     return res
