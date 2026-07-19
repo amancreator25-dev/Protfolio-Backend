@@ -3,18 +3,27 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 
-export const verifyJWT= asyncHandler(async(req, res, next)=>{
-   const token=await req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+export const verifyJWT = asyncHandler(async (req, res, next) => {
+    const token =
+        req.cookies?.accessToken ||
+        req.header("Authorization")?.replace("Bearer ", "");
 
-   if(!token){
-    throw new apiError(401,"Error in authorization(Unauthorized)!");
-   }
+    if (!token) {
+        throw new apiError(401, "Unauthorized!");
+    }
 
-   const decodedToken=jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const decodedToken = jwt.verify(
+        token,
+        process.env.ACCESS_TOKEN_SECRET
+    );
 
-   const user=await User.findById(decodedToken?._id).select("-password -refreshToken");
+    const user = await User.findById(decodedToken?._id)
+        .select("-password -refreshToken");
 
-   if(!user){
-    throw new apiError(400,"something went wrong!!!");
-   }
-})
+    if (!user) {
+        throw new apiError(401, "Invalid Access Token!");
+    }
+
+    req.user = user;   // Attach user to the request
+    next();            // Continue to the next middleware/controller
+});

@@ -27,7 +27,7 @@ router.patch(
 );
 
 router.get(
-    "/me",
+    "/current-user",
     verifyJWT,
     currentUser
 );
