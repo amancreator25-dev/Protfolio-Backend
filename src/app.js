@@ -17,7 +17,6 @@ const app = express();
 | Middlewares
 |--------------------------------------------------------------------------
 */
-console.log( "CORS",  process.env.CORS_ORIGIN)
 // CORS Configuration
 app.use(
     cors({

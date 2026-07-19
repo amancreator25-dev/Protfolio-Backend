@@ -6,7 +6,6 @@ const connectDB = async () => {
         console.log(process.env.MONGODB_URI)
         const uri = `${process.env.MONGODB_URI}/${DB_NAME}`;
 
-        console.log(uri);
 
         const connectionInstance = await mongoose.connect(uri);
 

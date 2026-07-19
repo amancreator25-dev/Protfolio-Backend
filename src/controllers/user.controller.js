@@ -43,9 +43,9 @@ const accountRegister = asyncHandler(async (req, res) => {
 });
 
 const accountLogin = asyncHandler(async (req, res) => {
-    const { email, username, password } = req.body;
+    const { login, password } = req.body;
 
-    if (!(email || username)) {
+    if (!login) {
         throw new apiError(
             400,
             "Email or Username is required!"
@@ -60,7 +60,10 @@ const accountLogin = asyncHandler(async (req, res) => {
     }
 
     const existUser = await User.findOne({
-        $or: [{ email }, { username }]
+        $or: [
+            { email: login.toLowerCase() },
+            { username: login.toLowerCase() }
+        ]
     });
 
     if (!existUser) {
@@ -91,22 +94,14 @@ const accountLogin = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: false,
+        secure: false, // localhost
         sameSite: "lax"
     };
 
     return res
         .status(200)
-        .cookie(
-            "accessToken",
-            accessToken,
-            options
-        )
-        .cookie(
-            "refreshToken",
-            refreshToken,
-            options
-        )
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
         .json(
             new apiResponse(
                 200,
@@ -119,7 +114,6 @@ const accountLogin = asyncHandler(async (req, res) => {
             )
         );
 });
-
 const updatePassword = asyncHandler(async (req, res) => {
     const {
         oldPassword,
