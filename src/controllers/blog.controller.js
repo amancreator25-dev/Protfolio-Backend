@@ -3,8 +3,10 @@ import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { Blog } from "../models/blog.model.js";
 
+
 const createBlog = asyncHandler(async (req, res) => {
-    const { title, content } = req.body;
+
+    const { title, content, status } = req.body;
 
     if (
         [title, content].some(
@@ -16,15 +18,15 @@ const createBlog = asyncHandler(async (req, res) => {
             "Title and Content are required!"
         );
     }
-
     const blog = await Blog.create({
         title,
         content,
-        author: req.user._id
+        isPublished: status === "published",
+        owner: req.user._id,
     });
 
     const createdBlog = await Blog.findById(blog._id)
-        .populate("author", "fullname username email");
+        .populate("owner", "fullname username email");
 
     return res.status(201).json(
         new apiResponse(
@@ -37,7 +39,7 @@ const createBlog = asyncHandler(async (req, res) => {
 
 const getAllBlogs = asyncHandler(async (req, res) => {
     const blogs = await Blog.find()
-        .populate("author", "fullname username")
+        .populate("owner", "fullname username")
         .sort({ createdAt: -1 });
 
     return res.status(200).json(
@@ -53,7 +55,7 @@ const getBlogById = asyncHandler(async (req, res) => {
     const { blogId } = req.params;
 
     const blog = await Blog.findById(blogId)
-        .populate("author", "fullname username email");
+        .populate("owner", "fullname username email");
 
     if (!blog) {
         throw new apiError(404, "Blog not found!");
@@ -77,7 +79,7 @@ const deleteBlog = asyncHandler(async (req, res) => {
         throw new apiError(404, "Blog not found!");
     }
 
-    if (blog.author.toString() !== req.user._id.toString()) {
+    if (blog.owner.toString() !== req.user._id.toString()) {
         throw new apiError(
             403,
             "You can only delete your own blogs!"
@@ -105,7 +107,7 @@ const updateBlog = asyncHandler(async (req, res) => {
         throw new apiError(404, "Blog not found!");
     }
 
-    if (blog.author.toString() !== req.user._id.toString()) {
+    if (blog.owner.toString() !== req.user._id.toString()) {
         throw new apiError(
             403,
             "You can only edit your own blogs!"
